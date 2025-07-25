@@ -4,46 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>V2Ray Configuration Hub</title>
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Custom Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0d1117;
+            --bg-color-start: #0d1117;
+            --bg-color-end: #1a1a2e;
             --bg-pattern-color: rgba(255,255,255,0.04);
             --text-color: #e0e0e0;
             --text-color-light: #a0a0a0;
-            --card-bg: #1a1a2e; /* Dark purple-blue */
-            --border-color: #3a3a5a;
-            --accent-color: #8b5cf6; /* Vibrant Purple */
-            --accent-color-hover: #a78bfa; /* Lighter Purple */
-            --accent-glow: rgba(139, 92, 246, 0.4);
-            --header-btn-bg: rgba(46, 46, 71, 0.5);
+            --card-bg: rgba(26, 26, 46, 0.7);
+            --border-color: rgba(58, 58, 90, 0.8);
+            --accent-color: #9333ea; 
+            --accent-color-hover: #a855f7;
+            --accent-glow: rgba(147, 51, 234, 0.5);
+            --header-btn-bg: rgba(46, 46, 71, 0.6);
             --header-btn-hover-bg: #2e2e47;
-            --protocol-color: #c084fc; /* Light Pink/Purple */
-            --notification-bg: #1f1f38;
-            --notification-border: #4a4a6a;
-            --wrapper-bg: rgba(0,0,0,0.15);
-            --wrapper-border: #2a2a4a;
-            --config-box-bg: rgba(0,0,0,0.25);
+            --protocol-color: #d8b4fe; 
+            --notification-bg: rgba(31, 31, 56, 0.8);
+            --wrapper-bg: rgba(26, 26, 46, 0.4);
+            --wrapper-border: rgba(42, 42, 74, 0.7);
+            --config-box-bg: rgba(0,0,0,0.3);
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(circle at 1px 1px, var(--bg-pattern-color) 1px, transparent 0);
-            background-size: 25px 25px;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color-start);
+            background-image: 
+                linear-gradient(160deg, var(--bg-color-start) 0%, var(--bg-color-end) 100%),
+                radial-gradient(circle at 1px 1px, var(--bg-pattern-color) 1px, transparent 0);
+            background-size: cover, 25px 25px;
             color: var(--text-color);
-            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+        }
+        .glass-effect {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
         .header-btn {
             background-color: var(--header-btn-bg);
             border: 1px solid var(--border-color);
-            backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }
         .header-btn:hover {
@@ -54,16 +56,17 @@
         .config-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+            transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
             opacity: 0;
-            transform: translateY(20px);
-            animation: fadeIn 0.5s forwards;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transform: translateY(25px) scale(0.98);
+            animation: fadeInUpScale 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
+
         .config-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0 25px var(--accent-glow), 0 7px 20px rgba(0,0,0,0.3);
+            transform: translateY(-8px) scale(1.02);
             border-color: var(--accent-color);
+            box-shadow: 0 0 30px var(--accent-glow), 0 8px 25px rgba(0,0,0,0.4);
         }
         .copy-btn {
             background: linear-gradient(45deg, var(--accent-color), var(--accent-color-hover));
@@ -71,19 +74,19 @@
             box-shadow: 0 4px 15px var(--accent-glow);
         }
         .copy-btn:hover {
-            transform: scale(1.03);
+            transform: scale(1.05);
         }
         .copy-btn:active {
             transform: scale(0.98);
         }
         .copy-btn.copied {
-            background: linear-gradient(45deg, #16a34a, #15803d); /* Green gradient when copied */
+            background: linear-gradient(45deg, #16a34a, #15803d);
         }
         .notification {
-            transition: opacity 0.5s ease, transform 0.5s ease;
             background-color: var(--notification-bg);
             border: 1px solid var(--notification-border);
             color: var(--text-color);
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
         .loader {
             border: 4px solid rgba(128, 128, 128, 0.2);
@@ -97,16 +100,18 @@
         .config-wrapper {
             background-color: var(--wrapper-bg);
             border: 1px solid var(--wrapper-border);
-            border-radius: 1.25rem; /* 20px */
-            padding: 1.5rem; /* 24px */
+            border-radius: 1.25rem;
+            padding: 1.5rem;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
         
         .protocol-title {
             color: var(--protocol-color);
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
         
-        /* New styles for the config string box */
         .config-string-box {
             background-color: var(--config-box-bg);
             border-radius: 0.5rem;
@@ -121,24 +126,22 @@
             text-align: left;
             border: 1px solid var(--border-color);
         }
-        .config-string-box::-webkit-scrollbar {
-            height: 5px;
-        }
-        .config-string-box::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .config-string-box::-webkit-scrollbar-thumb {
-            background-color: var(--accent-color);
-            border-radius: 3px;
-        }
+        .config-string-box::-webkit-scrollbar { height: 5px; }
+        .config-string-box::-webkit-scrollbar-track { background: transparent; }
+        .config-string-box::-webkit-scrollbar-thumb { background-color: var(--accent-color); border-radius: 3px; }
 
-        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUpScale {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes slideIn {
+            to { opacity: 1; transform: translateX(0); }
+        }
     </style>
 </head>
 <body class="antialiased">
 
-    <div id="notification" class="notification fixed top-5 right-5 py-2 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-10 z-50"></div>
+    <div id="notification" class="notification glass-effect fixed top-5 right-5 py-2 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-10 z-50"></div>
 
     <div class="container mx-auto px-4 py-8 md:py-12">
         <header class="text-center mb-10 md:mb-12 animate-fadeIn" style="animation-delay: 0.1s;">
@@ -146,11 +149,11 @@
             <p id="date-display" class="date-display text-lg mb-6"></p>
             
             <div class="flex justify-center items-center space-x-4">
-                <button id="refresh-btn" class="header-btn flex items-center space-x-2 text-white font-semibold py-2 px-4 rounded-lg">
+                <button id="refresh-btn" class="header-btn glass-effect flex items-center space-x-2 text-white font-semibold py-2 px-4 rounded-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
                     <span class="text-inherit">Refresh</span>
                 </button>
-                <button id="copy-all-btn" class="header-btn flex items-center space-x-2 text-white font-semibold py-2 px-4 rounded-lg">
+                <button id="copy-all-btn" class="header-btn glass-effect flex items-center space-x-2 text-white font-semibold py-2 px-4 rounded-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" /><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h6a2 2 0 00-2-2H5z" /></svg>
                     <span class="text-inherit">Copy All</span>
                 </button>
@@ -159,8 +162,7 @@
 
         <div id="loader" class="flex justify-center items-center h-40"><div class="loader w-12 h-12 rounded-full"></div></div>
 
-        <!-- Configs Container -->
-        <div class="config-wrapper">
+        <div class="config-wrapper glass-effect">
             <main id="config-container"></main>
         </div>
 
@@ -193,7 +195,7 @@
             const wrapper = document.querySelector('.config-wrapper');
             
             configContainer.innerHTML = '';
-            wrapper.style.display = 'none'; // Hide wrapper while loading
+            wrapper.style.display = 'none';
             loader.style.display = 'flex';
             allConfigs = [];
 
@@ -209,7 +211,7 @@
                 allConfigs = configs;
 
                 loader.style.display = 'none';
-                wrapper.style.display = 'block'; // Show wrapper with content
+                wrapper.style.display = 'block';
 
                 const groupedConfigs = configs.reduce((acc, config) => {
                     let protocol = config.substring(0, config.indexOf('://')).toUpperCase();
@@ -231,20 +233,23 @@
                     throw new Error("No configurations received from the source.");
                 }
 
-                protocols.forEach(protocol => {
+                protocols.forEach((protocol, protocolIndex) => {
                     const protocolSection = document.createElement('div');
                     protocolSection.className = 'mb-10 last:mb-0';
 
                     const title = document.createElement('h2');
                     title.className = 'protocol-title text-2xl font-bold mb-4 pb-2 border-b border-[var(--border-color)]';
                     title.textContent = protocol;
+                    title.style.animationDelay = `${protocolIndex * 0.2}s`;
                     protocolSection.appendChild(title);
 
                     const grid = document.createElement('div');
                     grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
                     
                     groupedConfigs[protocol].forEach((config, index) => {
-                        grid.appendChild(createConfigCard(config, index));
+                        const card = createConfigCard(config, index);
+                        card.style.animationDelay = `${(protocolIndex * 0.2) + (index * 0.08)}s`;
+                        grid.appendChild(card);
                     });
 
                     protocolSection.appendChild(grid);
@@ -282,9 +287,8 @@
 
         function createConfigCard(config, index) {
             const card = document.createElement('div');
-            card.className = 'config-card p-5 rounded-xl flex flex-col justify-between';
-            card.style.animationDelay = `${index * 0.08}s`;
-
+            card.className = 'config-card glass-effect p-5 rounded-xl flex flex-col justify-between';
+            
             const originalName = decodeURIComponent(config.split('#')[1] || 'Unnamed Config');
             const name = sanitizeName(originalName);
 
@@ -299,7 +303,7 @@
                 <div>
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="protocol-name font-bold text-lg">${protocol}</h3>
-                        <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full">${country}</span>
+                        <span class="text-xs bg-gray-700/50 text-gray-300 px-2 py-1 rounded-full">${country}</span>
                     </div>
                     <p class="font-semibold mb-2 break-all">${name}</p>
                 </div>
