@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V2Ray Configuration Hub</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --bg-pattern-color: rgba(255,255,255,0.04);
+            --text-color: #e0e0e0;
+            --text-color-light: #a0a0a0;
+            --card-bg: #1a1a2e; /* Dark purple-blue */
+            --border-color: #3a3a5a;
+            --accent-color: #8b5cf6; /* Vibrant Purple */
+            --accent-color-hover: #a78bfa; /* Lighter Purple */
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --header-btn-bg: rgba(46, 46, 71, 0.5);
+            --header-btn-hover-bg: #2e2e47;
+            --protocol-color: #c084fc; /* Light Pink/Purple */
+            --notification-bg: #1f1f38;
+            --notification-border: #4a4a6a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 1px 1px, var(--bg-pattern-color) 1px, transparent 0);
+            background-size: 25px 25px;
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .header-btn {
+            background-color: var(--header-btn-bg);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .header-btn:hover {
+            background-color: var(--header-btn-hover-bg);
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        .config-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s forwards;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .config-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 25px var(--accent-glow), 0 7px 20px rgba(0,0,0,0.3);
+            border-color: var(--accent-color);
+        }
+        .copy-btn {
+            background: linear-gradient(45deg, var(--accent-color), var(--accent-color-hover));
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+        .copy-btn:hover {
+            transform: scale(1.03);
+        }
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+        .copy-btn.copied {
+            background: linear-gradient(45deg, #16a34a, #15803d); /* Green gradient when copied */
+        }
+        .notification {
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            background-color: var(--notification-bg);
+            border: 1px solid var(--notification-border);
+            color: var(--text-color);
+        }
+        .loader {
+            border: 4px solid rgba(128, 128, 128, 0.2);
+            border-left-color: var(--accent-color);
+            animation: spin 1s linear infinite;
+        }
+        .protocol-name { color: var(--protocol-color); }
+        .date-display, .footer-text { color: var(--text-color-light); }
+        .main-title { color: var(--text-color); }
+
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="notification" class="notification fixed top-5 right-5 py-2 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-10 z-50"></div>
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+        <header class="text-center mb-10 md:mb-12 animate-fadeIn" style="animation-delay: 0.1s;">
+            <h1 class="main-title text-4xl md:text-5xl font-extrabold mb-3">V2Ray Configuration Hub</h1>
+            <p id="date-display" class="date-display text-lg mb-6"></p>
+            
+            <div class="flex justify-center items-center space-x-4">
+                <button id="refresh-btn" class="header-btn flex items-center space-x-2 text-white font-semibold py-2 px-4 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" /></svg>
+                    <span class="text-inherit">Refresh</span>
+                </button>
+                <button id="copy-all-btn" class="header-btn flex items-center space-x-2 text-white font-semibold py-2 px-4 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" /><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h6a2 2 0 00-2-2H5z" /></svg>
+                    <span class="text-inherit">Copy All</span>
+                </button>
+            </div>
+        </header>
+
+        <div id="loader" class="flex justify-center items-center h-40"><div class="loader w-12 h-12 rounded-full"></div></div>
+
+        <main id="config-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></main>
+
+        <footer class="text-center mt-12 footer-text animate-fadeIn" style="animation-delay: 0.5s;">
+            <p>eQnz</p>
+        </footer>
+    </div>
+
+    <script>
+        let allConfigs = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            displayDate();
+            fetchConfigs();
+
+            document.getElementById('refresh-btn').addEventListener('click', fetchConfigs);
+            document.getElementById('copy-all-btn').addEventListener('click', copyAllConfigs);
+        });
+
+        function displayDate() {
+            const dateElement = document.getElementById('date-display');
+            const today = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            dateElement.textContent = today.toLocaleDateString('en-US', options);
+        }
+
+        async function fetchConfigs() {
+            const configContainer = document.getElementById('config-container');
+            const loader = document.getElementById('loader');
+            
+            configContainer.innerHTML = '';
+            loader.style.display = 'flex';
+            allConfigs = [];
+
+            const targetUrl = 'https://planer29.ss948.site/get-config.php';
+            const url = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+                
+                const data = await response.text();
+                const configs = data.trim().split(/\s+/).filter(c => c);
+                allConfigs = configs;
+
+                loader.style.display = 'none';
+
+                if (configs.length === 0) throw new Error("No configurations received from the source.");
+
+                configs.forEach((config, index) => {
+                    configContainer.appendChild(createConfigCard(config, index));
+                });
+
+            } catch (error) {
+                loader.style.display = 'none';
+                configContainer.innerHTML = `<div class="col-span-full text-center bg-red-900/50 border border-red-700 text-red-300 p-6 rounded-lg"><h3 class="font-bold text-xl mb-2">Failed to load configurations</h3><p>${error.message}</p></div>`;
+                console.error('Fetch error:', error);
+            }
+        }
+
+        /**
+         * Sanitizes a configuration name by censoring IP addresses and domain names.
+         * @param {string} originalName The original name string.
+         * @returns {string} The sanitized name string.
+         */
+        function sanitizeName(originalName) {
+            // Censor IP addresses (e.g., 45.144.49.140 -> 45.***.***.140)
+            const ipRegex = /(\d{1,3})\.\d{1,3}\.\d{1,3}\.(\d{1,3})/;
+            if (ipRegex.test(originalName)) {
+                return originalName.replace(ipRegex, '$1.***.***.$2');
+            }
+
+            // Censor domain names (e.g., edt-f5k.pages.dev -> edt-***.dev)
+            const domainRegex = /([a-zA-Z0-9-]+)\.([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,})/;
+             if (domainRegex.test(originalName)) {
+                // This is a simplified approach. It will catch many common domain structures.
+                // For 'sub.domain.tld', it becomes 'sub.***.tld'
+                return originalName.replace(domainRegex, (match, p1, p2, p3) => {
+                    // if p2 contains dots, it's a multi-level subdomain. We just simplify.
+                    if (p2.includes('.')) {
+                        const p2_parts = p2.split('.');
+                        return `${p1}.***.${p2_parts[p2_parts.length-1]}.${p3}`;
+                    }
+                    return `${p1}.***.${p3}`;
+                });
+            }
+            
+            return originalName;
+        }
+
+        function createConfigCard(config, index) {
+            const card = document.createElement('div');
+            card.className = 'config-card p-5 rounded-xl flex flex-col justify-between';
+            card.style.animationDelay = `${index * 0.08}s`;
+
+            const originalName = decodeURIComponent(config.split('#')[1] || 'Unnamed Config');
+            // **FIX**: Sanitize the name to censor IPs and domains
+            const name = sanitizeName(originalName);
+
+            // **FIX**: Change "SS" to "Shadowsocks"
+            let protocol = config.substring(0, config.indexOf('://')).toUpperCase();
+            if (protocol === 'SS') {
+                protocol = 'Shadowsocks';
+            }
+            
+            const country = originalName.split('|')[0].trim();
+
+            card.innerHTML = `
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="protocol-name font-bold text-lg">${protocol}</h3>
+                        <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full">${country}</span>
+                    </div>
+                    <p class="font-semibold mb-6 break-all h-16 overflow-hidden">${name}</p>
+                </div>
+                <button class="copy-btn w-full text-white font-bold py-2.5 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                    <span>Copy Configuration</span>
+                </button>
+            `;
+
+            const copyButton = card.querySelector('.copy-btn');
+            const copyButtonText = copyButton.querySelector('span');
+
+            copyButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                copyToClipboard(config, 'Configuration Copied!');
+                
+                copyButton.classList.add('copied');
+                copyButtonText.textContent = 'Copied!';
+                
+                setTimeout(() => {
+                    copyButton.classList.remove('copied');
+                    copyButtonText.textContent = 'Copy Configuration';
+                }, 2000);
+            });
+
+            return card;
+        }
+
+        function copyAllConfigs() {
+            if (allConfigs.length === 0) {
+                showNotification('No configurations to copy.', true);
+                return;
+            }
+            const allConfigsString = allConfigs.join('\n');
+            copyToClipboard(allConfigsString, `${allConfigs.length} configs copied!`);
+        }
+
+        function copyToClipboard(text, message) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.top = '-9999px';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showNotification(message);
+            } catch (err) {
+                showNotification('Failed to copy!', true);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        let notificationTimeout;
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.backgroundColor = isError ? '#4a1d1d' : 'var(--notification-bg)';
+            notification.style.borderColor = isError ? '#a02a2a' : 'var(--notification-border)';
+            
+            clearTimeout(notificationTimeout);
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateY(0)';
+
+            notificationTimeout = setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(10px)';
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
