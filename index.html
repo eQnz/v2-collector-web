@@ -27,6 +27,9 @@
             --protocol-color: #c084fc; /* Light Pink/Purple */
             --notification-bg: #1f1f38;
             --notification-border: #4a4a6a;
+            --wrapper-bg: rgba(0,0,0,0.15);
+            --wrapper-border: #2a2a4a;
+            --config-box-bg: rgba(0,0,0,0.25);
         }
 
         body {
@@ -90,6 +93,44 @@
         .protocol-name { color: var(--protocol-color); }
         .date-display, .footer-text { color: var(--text-color-light); }
         .main-title { color: var(--text-color); }
+        
+        .config-wrapper {
+            background-color: var(--wrapper-bg);
+            border: 1px solid var(--wrapper-border);
+            border-radius: 1.25rem; /* 20px */
+            padding: 1.5rem; /* 24px */
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .protocol-title {
+            color: var(--protocol-color);
+        }
+        
+        /* New styles for the config string box */
+        .config-string-box {
+            background-color: var(--config-box-bg);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            margin-bottom: 1.25rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            color: var(--text-color-light);
+            white-space: nowrap;
+            overflow-x: auto;
+            text-align: left;
+            border: 1px solid var(--border-color);
+        }
+        .config-string-box::-webkit-scrollbar {
+            height: 5px;
+        }
+        .config-string-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .config-string-box::-webkit-scrollbar-thumb {
+            background-color: var(--accent-color);
+            border-radius: 3px;
+        }
 
         @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -118,10 +159,13 @@
 
         <div id="loader" class="flex justify-center items-center h-40"><div class="loader w-12 h-12 rounded-full"></div></div>
 
-        <main id="config-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></main>
+        <!-- Configs Container -->
+        <div class="config-wrapper">
+            <main id="config-container"></main>
+        </div>
 
         <footer class="text-center mt-12 footer-text animate-fadeIn" style="animation-delay: 0.5s;">
-            <p>eQnz</p>
+            <p>Powered by eQnz</p>
         </footer>
     </div>
 
@@ -146,12 +190,14 @@
         async function fetchConfigs() {
             const configContainer = document.getElementById('config-container');
             const loader = document.getElementById('loader');
+            const wrapper = document.querySelector('.config-wrapper');
             
             configContainer.innerHTML = '';
+            wrapper.style.display = 'none'; // Hide wrapper while loading
             loader.style.display = 'flex';
             allConfigs = [];
 
-            const targetUrl = 'https://planer29.ss948.site/get-config.php';
+            const targetUrl = 'https://white-glade-66bc.qerw3.workers.dev/';
             const url = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
 
             try {
@@ -163,39 +209,66 @@
                 allConfigs = configs;
 
                 loader.style.display = 'none';
+                wrapper.style.display = 'block'; // Show wrapper with content
 
-                if (configs.length === 0) throw new Error("No configurations received from the source.");
+                const groupedConfigs = configs.reduce((acc, config) => {
+                    let protocol = config.substring(0, config.indexOf('://')).toUpperCase();
+                    if (protocol === 'SS') {
+                        protocol = 'Shadowsocks';
+                    } else if (protocol === '') {
+                        protocol = 'Unknown';
+                    }
+                    if (!acc[protocol]) {
+                        acc[protocol] = [];
+                    }
+                    acc[protocol].push(config);
+                    return acc;
+                }, {});
 
-                configs.forEach((config, index) => {
-                    configContainer.appendChild(createConfigCard(config, index));
+                const protocols = Object.keys(groupedConfigs).sort();
+
+                if (protocols.length === 0) {
+                    throw new Error("No configurations received from the source.");
+                }
+
+                protocols.forEach(protocol => {
+                    const protocolSection = document.createElement('div');
+                    protocolSection.className = 'mb-10 last:mb-0';
+
+                    const title = document.createElement('h2');
+                    title.className = 'protocol-title text-2xl font-bold mb-4 pb-2 border-b border-[var(--border-color)]';
+                    title.textContent = protocol;
+                    protocolSection.appendChild(title);
+
+                    const grid = document.createElement('div');
+                    grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+                    
+                    groupedConfigs[protocol].forEach((config, index) => {
+                        grid.appendChild(createConfigCard(config, index));
+                    });
+
+                    protocolSection.appendChild(grid);
+                    configContainer.appendChild(protocolSection);
                 });
+
 
             } catch (error) {
                 loader.style.display = 'none';
+                wrapper.style.display = 'block';
                 configContainer.innerHTML = `<div class="col-span-full text-center bg-red-900/50 border border-red-700 text-red-300 p-6 rounded-lg"><h3 class="font-bold text-xl mb-2">Failed to load configurations</h3><p>${error.message}</p></div>`;
                 console.error('Fetch error:', error);
             }
         }
 
-        /**
-         * Sanitizes a configuration name by censoring IP addresses and domain names.
-         * @param {string} originalName The original name string.
-         * @returns {string} The sanitized name string.
-         */
         function sanitizeName(originalName) {
-            // Censor IP addresses (e.g., 45.144.49.140 -> 45.***.***.140)
             const ipRegex = /(\d{1,3})\.\d{1,3}\.\d{1,3}\.(\d{1,3})/;
             if (ipRegex.test(originalName)) {
                 return originalName.replace(ipRegex, '$1.***.***.$2');
             }
 
-            // Censor domain names (e.g., edt-f5k.pages.dev -> edt-***.dev)
             const domainRegex = /([a-zA-Z0-9-]+)\.([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,})/;
              if (domainRegex.test(originalName)) {
-                // This is a simplified approach. It will catch many common domain structures.
-                // For 'sub.domain.tld', it becomes 'sub.***.tld'
                 return originalName.replace(domainRegex, (match, p1, p2, p3) => {
-                    // if p2 contains dots, it's a multi-level subdomain. We just simplify.
                     if (p2.includes('.')) {
                         const p2_parts = p2.split('.');
                         return `${p1}.***.${p2_parts[p2_parts.length-1]}.${p3}`;
@@ -213,10 +286,8 @@
             card.style.animationDelay = `${index * 0.08}s`;
 
             const originalName = decodeURIComponent(config.split('#')[1] || 'Unnamed Config');
-            // **FIX**: Sanitize the name to censor IPs and domains
             const name = sanitizeName(originalName);
 
-            // **FIX**: Change "SS" to "Shadowsocks"
             let protocol = config.substring(0, config.indexOf('://')).toUpperCase();
             if (protocol === 'SS') {
                 protocol = 'Shadowsocks';
@@ -230,11 +301,14 @@
                         <h3 class="protocol-name font-bold text-lg">${protocol}</h3>
                         <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full">${country}</span>
                     </div>
-                    <p class="font-semibold mb-6 break-all h-16 overflow-hidden">${name}</p>
+                    <p class="font-semibold mb-2 break-all">${name}</p>
                 </div>
-                <button class="copy-btn w-full text-white font-bold py-2.5 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                    <span>Copy Configuration</span>
-                </button>
+                <div>
+                    <div class="config-string-box">${config}</div>
+                    <button class="copy-btn w-full text-white font-bold py-2.5 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                        <span>Copy Configuration</span>
+                    </button>
+                </div>
             `;
 
             const copyButton = card.querySelector('.copy-btn');
